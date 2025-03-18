@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 
 export default function Home() {
@@ -96,15 +94,14 @@ export default function Home() {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"
                     clipRule="evenodd"
                   ></path>
-                  <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"></path>
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-bold dark:text-white">Smart Notifications</h3>
+              <h3 className="mb-2 text-xl font-bold dark:text-white">Sentiment Analysis</h3>
               <p className="text-gray-500 dark:text-gray-400">
-                Receive alerts for price drops, stock availability, and product updates.
+                Analyze customer reviews and feedback to understand product sentiment and make data-driven decisions.
               </p>
             </div>
           </div>

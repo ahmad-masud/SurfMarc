@@ -32,3 +32,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Add cursor-pointer to all clickable elements */
+button, 
+a, 
+[role="button"],
+[onclick] {
+  cursor: pointer;
+}
