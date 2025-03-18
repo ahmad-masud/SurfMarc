@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -27,9 +28,13 @@ export default function Home() {
             </div>
           </div>
           <div className="hidden lg:mt-0 lg:col-span-5 lg:flex">
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/8866/8866156.png"
-              alt="mockup"
+            <Image
+              src="/hero.png"
+              alt="SurfMarc Hero"
+              width={800}
+              height={400}
+              className="w-full h-auto rounded-lg shadow-lg"
+              priority
             />
           </div>
         </div>
