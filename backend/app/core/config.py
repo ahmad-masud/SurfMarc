@@ -1,8 +1,11 @@
 from typing import List
-from pydantic_settings import BaseSettings
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, BaseModel
+from dotenv import load_dotenv
+import os
 
-class Settings(BaseSettings):
+load_dotenv()
+
+class Settings(BaseModel):
     PROJECT_NAME: str = "SurfMarc"
     VERSION: str = "1.0.0"
     DESCRIPTION: str = "SurfMarc API for product information retrieval"
@@ -12,16 +15,12 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[AnyHttpUrl] = ["http://localhost:3000"]
     
     # JWT Configuration
-    SECRET_KEY: str = "your-secret-key-here"  # Change this in production
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")  # Change this in production
+    ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
     # Supabase Configuration
-    SUPABASE_URL: str
-    SUPABASE_KEY: str
-    
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
 
 settings = Settings() 
