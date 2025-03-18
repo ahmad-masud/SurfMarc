@@ -46,63 +46,63 @@ next-env.d.ts
 *.swo
 Thumbs.db
 
-# Backend
-backend/__pycache__/
-backend/*.py[cod]
-backend/*$py.class
-backend/*.so
-backend/.Python
-backend/build/
-backend/develop-eggs/
-backend/dist/
-backend/downloads/
-backend/eggs/
-backend/.eggs/
-backend/lib/
-backend/lib64/
-backend/parts/
-backend/sdist/
-backend/var/
-backend/wheels/
-backend/*.egg-info/
-backend/.installed.cfg
-backend/*.egg
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Backend Virtual Environment
-backend/venv/
-backend/env/
-backend/ENV/
-backend/.env
-backend/.venv
-backend/env.bak/
-backend/venv.bak/
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+.venv
+env.bak/
+venv.bak/
 
-# Backend Logs
-backend/*.log
-backend/logs/
-backend/log/
+# Logs
+*.log
+logs/
+log/
 
-# Backend Coverage reports
-backend/htmlcov/
-backend/.tox/
-backend/.coverage
-backend/.coverage.*
-backend/.cache
-backend/nosetests.xml
-backend/coverage.xml
-backend/*.cover
-backend/.hypothesis/
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
 
-# Backend mypy
-backend/.mypy_cache/
-backend/.dmypy.json
-backend/dmypy.json
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
-# Backend pytest
-backend/.pytest_cache/
+# pytest
+.pytest_cache/
 
-# Backend Jupyter Notebook
-backend/.ipynb_checkpoints
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# Backend pyenv
-backend/.python-version
+# pyenv
+.python-version
