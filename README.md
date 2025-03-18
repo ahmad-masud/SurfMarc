@@ -1,121 +1,129 @@
 # SurfMarc
 
-SurfMarc is a web application that helps users find and compare surfboard information. The project consists of a Next.js frontend and a FastAPI backend.
+SurfMarc is a web application that helps users make informed purchase decisions by providing comprehensive product information, price tracking, and sentiment analysis.
+
+## Features
+
+- **Price Tracking**: Monitor price changes and get notified when prices drop to your desired level.
+- **Product Analysis**: Get detailed product information, specifications, and comparisons across different sellers.
+- **Sentiment Analysis**: Analyze customer reviews and feedback to understand product sentiment and make data-driven decisions.
+
+## Tech Stack
+
+- **Frontend**: Next.js 14 with TypeScript and Tailwind CSS
+- **Backend**: FastAPI with Python 3.11.2
+- **Database**: Supabase
+- **Authentication**: JWT with FastAPI
+- **Containerization**: Docker and Docker Compose (Backend only)
 
 ## Project Structure
 
 ```
 surfmarc/
-├── app/                 # Next.js frontend application
-│   ├── components/     # React components
-│   ├── globals.css     # Global styles
-│   └── page.tsx        # Home page
-├── backend/            # FastAPI backend application
-│   ├── app/           # Application package
-│   │   ├── api/       # API endpoints
-│   │   ├── core/      # Core functionality
-│   │   ├── crud/      # Database operations
-│   │   ├── db/        # Database configuration
-│   │   ├── models/    # Pydantic models
-│   │   └── schemas/   # Data schemas
-│   ├── requirements.txt # Python dependencies
-│   └── main.py        # Application entry point
-└── README.md          # This file
+├── .env                  # Environment variables
+├── docker-compose.yml    # Docker Compose configuration
+├── server/              # Backend server code
+│   ├── Dockerfile
+│   ├── .dockerignore
+│   ├── requirements.txt
+│   └── app/
+│       ├── api/
+│       ├── core/
+│       ├── crud/
+│       ├── db/
+│       ├── models/
+│       └── schemas/
+└── app/                 # Frontend code
+    ├── components/
+    ├── globals.css
+    └── page.tsx
 ```
 
-## Frontend (Next.js)
+## Prerequisites
 
-### Prerequisites
 - Node.js 18.x or later
-- npm or yarn
+- Python 3.11.2
+- Docker and Docker Compose
+- Supabase account and credentials
 
-### Getting Started
+## Environment Variables
 
-1. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
+Create a `.env` file in the root directory with the following variables:
 
-2. Run the development server:
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-3. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Backend (FastAPI)
-
-### Prerequisites
-- Python 3.12.3
-- pip
-
-### Getting Started
-
-1. Create and activate a virtual environment:
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Set up environment variables:
-Create a `.env` file in the backend directory with:
-```
-PROJECT_NAME=SurfMarc
-VERSION=1.0.0
-DESCRIPTION=SurfMarc API for product information retrieval
-API_V1_STR=/api/v1
-
-# CORS Configuration
-CORS_ORIGINS=["http://localhost:3000"]
+```env
+# Supabase Configuration
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
 
 # JWT Configuration
-SECRET_KEY=your-secret-key-here
+SECRET_KEY=your_secret_key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-# Supabase Configuration
-SUPABASE_URL=your-supabase-url
-SUPABASE_KEY=your-supabase-key
+# Frontend Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-4. Run the development server:
-```bash
-uvicorn main:app --reload
-```
+## Getting Started
 
-5. Open [http://localhost:8000/docs](http://localhost:8000/docs) for the API documentation.
+### Backend Setup
+
+#### Using Docker (Recommended)
+
+1. Make sure Docker Desktop is running
+2. Build and start the container:
+   ```bash
+   docker-compose up --build
+   ```
+3. Access the API at http://localhost:8000
+4. View API documentation at http://localhost:8000/docs
+
+The container is configured with hot-reload enabled, so any changes you make to the server code will automatically restart the application.
+
+#### Manual Setup
+
+1. Create and activate a virtual environment:
+   ```bash
+   # Windows
+   python -m venv venv
+   venv\Scripts\activate
+
+   # Unix/MacOS
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+2. Install dependencies:
+   ```bash
+   cd server
+   pip install -r requirements.txt
+   ```
+
+3. Start the FastAPI server:
+   ```bash
+   uvicorn main:app --reload
+   ```
+
+### Frontend Setup
+
+1. Install dependencies:
+   ```bash
+   cd app
+   npm install
+   ```
+
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Access the application at http://localhost:3000
 
 ## API Endpoints
 
-### Authentication
-- `POST /api/v1/auth/register` - Register a new user
-- `POST /api/v1/auth/login` - Login and get access token
-
-### Users
-- `GET /api/v1/users/me` - Get current user information
-
-## Development
-
-### Frontend
-- Uses Next.js 14 with App Router
-- Styled with Tailwind CSS
-- TypeScript for type safety
-
-### Backend
-- FastAPI for high-performance API
-- Pydantic for data validation
-- Supabase for database
-- JWT for authentication
+- `POST /api/v1/auth/register`: Register a new user
+- `POST /api/v1/auth/login`: Login and get access token
+- `GET /api/v1/users/me`: Get current user information
 
 ## Contributing
 
