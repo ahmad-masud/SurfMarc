@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SurfMarc
 
-## Getting Started
+SurfMarc is a web application that helps users find and compare surfboard information. The project consists of a Next.js frontend and a FastAPI backend.
 
-First, run the development server:
+## Project Structure
 
+```
+surfmarc/
+├── app/                 # Next.js frontend application
+│   ├── components/     # React components
+│   ├── globals.css     # Global styles
+│   └── page.tsx        # Home page
+├── backend/            # FastAPI backend application
+│   ├── app/           # Application package
+│   │   ├── api/       # API endpoints
+│   │   ├── core/      # Core functionality
+│   │   ├── crud/      # Database operations
+│   │   ├── db/        # Database configuration
+│   │   ├── models/    # Pydantic models
+│   │   └── schemas/   # Data schemas
+│   ├── requirements.txt # Python dependencies
+│   └── main.py        # Application entry point
+└── README.md          # This file
+```
+
+## Frontend (Next.js)
+
+### Prerequisites
+- Node.js 18.x or later
+- npm or yarn
+
+### Getting Started
+
+1. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+2. Run the development server:
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Backend (FastAPI)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
+- Python 3.12.3
+- pip
 
-## Learn More
+### Getting Started
 
-To learn more about Next.js, take a look at the following resources:
+1. Create and activate a virtual environment:
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Set up environment variables:
+Create a `.env` file in the backend directory with:
+```
+PROJECT_NAME=SurfMarc
+VERSION=1.0.0
+DESCRIPTION=SurfMarc API for product information retrieval
+API_V1_STR=/api/v1
 
-## Deploy on Vercel
+# CORS Configuration
+CORS_ORIGINS=["http://localhost:3000"]
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# JWT Configuration
+SECRET_KEY=your-secret-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Supabase Configuration
+SUPABASE_URL=your-supabase-url
+SUPABASE_KEY=your-supabase-key
+```
+
+4. Run the development server:
+```bash
+uvicorn main:app --reload
+```
+
+5. Open [http://localhost:8000/docs](http://localhost:8000/docs) for the API documentation.
+
+## API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/register` - Register a new user
+- `POST /api/v1/auth/login` - Login and get access token
+
+### Users
+- `GET /api/v1/users/me` - Get current user information
+
+## Development
+
+### Frontend
+- Uses Next.js 14 with App Router
+- Styled with Tailwind CSS
+- TypeScript for type safety
+
+### Backend
+- FastAPI for high-performance API
+- Pydantic for data validation
+- Supabase for database
+- JWT for authentication
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

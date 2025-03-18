@@ -1,8 +1,12 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary: #6b7280;
+  --accent: #3b82f6;
 }
 
 @theme inline {
@@ -14,8 +18,12 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #111827;
+    --foreground: #f9fafb;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --secondary: #9ca3af;
+    --accent: #60a5fa;
   }
 }
 
