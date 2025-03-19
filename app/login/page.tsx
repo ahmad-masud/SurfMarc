@@ -2,14 +2,27 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useUser } from '../context/UserContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const { login } = useUser();
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', { email, password });
+    setError('');
+
+    try {
+      await login(email, password);
+      // Redirect to home page after successful login
+      router.push('/');
+    } catch (err) {
+      setError('Invalid email or password');
+    }
   };
 
   return (
@@ -21,8 +34,15 @@ export default function Login() {
               Sign in to your account
             </h1>
             <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
+              {error && (
+                <div className="bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-200 p-4 rounded-md">
+                  {error}
+                </div>
+              )}
               <div>
-                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
+                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                  Your email
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -35,7 +55,9 @@ export default function Login() {
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
+                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                  Password
+                </label>
                 <input
                   type="password"
                   name="password"
@@ -58,10 +80,15 @@ export default function Login() {
                     />
                   </div>
                   <div className="ml-3 text-sm">
-                    <label htmlFor="remember" className="text-gray-500 dark:text-gray-300">Remember me</label>
+                    <label htmlFor="remember" className="text-gray-500 dark:text-gray-300">
+                      Remember me
+                    </label>
                   </div>
                 </div>
-                <Link href="/forgot-password" className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -71,9 +98,9 @@ export default function Login() {
               >
                 Sign in
               </button>
-              <p className="text-sm text-gray-600">
-                Don&apos;t have an account?{' '}
-                <Link href="/register" className="text-blue-600 hover:text-blue-800">
+              <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+                Don't have an account yet?{' '}
+                <Link href="/register" className="font-medium text-primary-600 hover:underline dark:text-primary-500">
                   Sign up
                 </Link>
               </p>

@@ -1,7 +1,66 @@
+'use client';
+
+import { useUser } from './context/UserContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Home() {
+  const { user } = useUser();
+
+  if (user) {
+    return (
+      <ProtectedRoute>
+        <div className="pt-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+              Welcome, {user.full_name}!
+            </h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Quick Stats */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  Quick Stats
+                </h2>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Saved Products</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Price Alerts</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Wishlist Items</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  Recent Activity
+                </h2>
+                <p className="text-gray-500 dark:text-gray-400">No recent activity</p>
+              </div>
+
+              {/* Price Alerts */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  Price Alerts
+                </h2>
+                <p className="text-gray-500 dark:text-gray-400">No active price alerts</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
+
   return (
     <div className="pt-16">
       <section className="bg-white dark:bg-gray-900">

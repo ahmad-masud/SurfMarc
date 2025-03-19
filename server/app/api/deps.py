@@ -1,35 +1,38 @@
-from typing import Generator, Optional
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt
-from pydantic import ValidationError
+from jose import jwt, JWTError
 from app.core.config import settings
-from app.crud.user import CRUDUser
-from app.schemas.user import TokenData, User
+from app.schemas.user import User
 from app.db.supabase import supabase
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> Optional[User]:
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
-        token_data = TokenData(**payload)
-        if token_data.sub is None:
+        # Validate our JWT token
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-    except (jwt.JWTError, ValidationError):
+            
+        # Get the user details from the users table
+        user_data = supabase.table("users").select("*").eq("email", email).single().execute()
+        if not user_data.data:
+            raise credentials_exception
+            
+        return User(**user_data.data)
+        
+    except JWTError:
         raise credentials_exception
-    
-    user = supabase.table("users").select("*").eq("id", token_data.sub).single().execute()
-    if user.data is None:
+    except Exception as e:
+        print(f"Auth error: {str(e)}")  # For debugging
         raise credentials_exception
-    return User(**user.data)
 
 def get_current_active_user(
     current_user: User = Depends(get_current_user),
