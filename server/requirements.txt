@@ -11,8 +11,8 @@ email-validator==2.0.0.post2
 scrapy==2.11.0
 playwright==1.41.2
 beautifulsoup4==4.12.2
-transformers==4.36.2
-torch==2.1.2
+transformers==4.49.0
+torch==2.6.0
 faiss-cpu==1.7.4
 numpy==1.24.3
 pandas==2.0.3
