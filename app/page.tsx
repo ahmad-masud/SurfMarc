@@ -1,12 +1,46 @@
 'use client';
 
+import { useState } from 'react';
 import { useUser } from './context/UserContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Link from 'next/link';
 import Image from 'next/image';
+import ProductUrlForm from './components/ProductUrlForm';
+import ProductAnalysis from './components/ProductAnalysis';
 
 export default function Home() {
   const { user } = useUser();
+  const [isLoading, setIsLoading] = useState(false);
+  const [productData, setProductData] = useState<any>(null);
+  const [error, setError] = useState('');
+
+  const handleAnalyzeProduct = async (url: string) => {
+    setIsLoading(true);
+    setError('');
+    setProductData(null);
+
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/products/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze product');
+      }
+
+      const data = await response.json();
+      setProductData(data);
+    } catch (err) {
+      setError('Failed to analyze product. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (user) {
     return (
@@ -16,45 +50,16 @@ export default function Home() {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
               Welcome, {user.full_name}!
             </h1>
+
+            <ProductUrlForm onSubmit={handleAnalyzeProduct} isLoading={isLoading} />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Quick Stats */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Quick Stats
-                </h2>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Saved Products</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Price Alerts</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Wishlist Items</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
-                  </div>
-                </div>
+            {error && (
+              <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
+                {error}
               </div>
+            )}
 
-              {/* Recent Activity */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Recent Activity
-                </h2>
-                <p className="text-gray-500 dark:text-gray-400">No recent activity</p>
-              </div>
-
-              {/* Price Alerts */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Price Alerts
-                </h2>
-                <p className="text-gray-500 dark:text-gray-400">No active price alerts</p>
-              </div>
-            </div>
+            {productData && <ProductAnalysis data={productData} />}
           </div>
         </div>
       </ProtectedRoute>
