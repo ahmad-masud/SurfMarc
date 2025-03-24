@@ -1,6 +1,6 @@
 services:
   api:
-    build: 
+    build:
       context: ./server
       dockerfile: Dockerfile
     ports:
@@ -13,4 +13,4 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
     volumes:
       - ./server:/app
-    restart: unless-stopped 
+    restart: unless-stopped

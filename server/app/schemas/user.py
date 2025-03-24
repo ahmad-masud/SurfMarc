@@ -16,6 +16,18 @@ class UserCreate(BaseModel):
     full_name: str
     is_active: bool = True
 
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr 
+
 class Token(BaseModel):
     access_token: str
     token_type: str

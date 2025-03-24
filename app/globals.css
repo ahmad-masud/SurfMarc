@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -34,8 +34,8 @@ body {
 }
 
 /* Add cursor-pointer to all clickable elements */
-button, 
-a, 
+button,
+a,
 [role="button"],
 [onclick] {
   cursor: pointer;

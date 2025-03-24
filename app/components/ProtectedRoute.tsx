@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUser } from '../context/UserContext';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "../context/UserContext";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
@@ -10,7 +10,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [user, loading, router]);
 
@@ -27,4 +27,4 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   }
 
   return <>{children}</>;
-} 
+}

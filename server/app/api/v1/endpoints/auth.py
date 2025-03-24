@@ -4,20 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 from app.core.config import settings
-from app.schemas.user import User, UserCreate, Token, LoginRequest
+from app.core.security import create_access_token
+from app.schemas.user import User, UserCreate, Token, LoginRequest, PasswordResetRequest
 from app.db.supabase import supabase
 
 router = APIRouter()
-
-def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
 
 @router.post("/login", response_model=Token)
 async def login(request: LoginRequest) -> Any:
@@ -159,3 +150,25 @@ async def register(user_in: UserCreate) -> Any:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         ) 
+
+@router.post("/reset-password")
+async def reset_password(request: PasswordResetRequest):
+    """
+    Request a password reset email.
+    """
+    try:
+        response = supabase.auth.reset_password_for_email(request.email)
+
+        if hasattr(response, "error") and response.error:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to send password reset email",
+            )
+
+        return {"message": "Password reset email sent successfully"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )

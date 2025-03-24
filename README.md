@@ -83,6 +83,7 @@ The container is configured with hot-reload enabled, so any changes you make to 
 #### Manual Setup
 
 1. Create and activate a virtual environment:
+
    ```bash
    # Windows
    python -m venv venv
@@ -94,6 +95,7 @@ The container is configured with hot-reload enabled, so any changes you make to 
    ```
 
 2. Install dependencies:
+
    ```bash
    cd server
    pip install -r requirements.txt
@@ -107,12 +109,14 @@ The container is configured with hot-reload enabled, so any changes you make to 
 ### Frontend Setup
 
 1. Install dependencies:
+
    ```bash
    cd app
    npm install
    ```
 
 2. Start the development server:
+
    ```bash
    npm run dev
    ```

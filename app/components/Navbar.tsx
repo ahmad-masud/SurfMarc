@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useUser } from '../context/UserContext';
+import Link from "next/link";
+import { useUser } from "../context/UserContext";
 
 const Navbar = () => {
   const { user, logout } = useUser();

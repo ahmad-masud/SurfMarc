@@ -1,42 +1,42 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useUser } from './context/UserContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Link from 'next/link';
-import Image from 'next/image';
-import ProductUrlForm from './components/ProductUrlForm';
-import ProductAnalysis from './components/ProductAnalysis';
+import { useState } from "react";
+import { useUser } from "./context/UserContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Link from "next/link";
+import Image from "next/image";
+import ProductUrlForm from "./components/ProductUrlForm";
+import ProductAnalysis from "./components/ProductAnalysis";
 
 export default function Home() {
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [productData, setProductData] = useState<any>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleAnalyzeProduct = async (url: string) => {
     setIsLoading(true);
-    setError('');
+    setError("");
     setProductData(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/products/analyze', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/api/v1/products/analyze", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({ url }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to analyze product');
+        throw new Error("Failed to analyze product");
       }
 
       const data = await response.json();
       setProductData(data);
     } catch (err) {
-      setError('Failed to analyze product. Please try again.');
+      setError("Failed to analyze product. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +52,7 @@ export default function Home() {
             </h1>
 
             <ProductUrlForm onSubmit={handleAnalyzeProduct} isLoading={isLoading} />
-            
+
             {error && (
               <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
                 {error}
@@ -170,7 +170,8 @@ export default function Home() {
               </div>
               <h3 className="mb-2 text-xl font-bold dark:text-white">Sentiment Analysis</h3>
               <p className="text-gray-500 dark:text-gray-400">
-                Analyze customer reviews and feedback to understand product sentiment and make data-driven decisions.
+                Analyze customer reviews and feedback to understand product sentiment and make
+                data-driven decisions.
               </p>
             </div>
           </div>
