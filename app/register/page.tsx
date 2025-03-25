@@ -28,7 +28,7 @@ export default function Register() {
     try {
       await register(email, password, fullName);
       setMessage("Registration successful! Activation email sent. Please check your inbox.");
-    } catch (err) {
+    } catch {
       setError("Registration failed. Please try again.");
     }
   };
@@ -37,7 +37,7 @@ export default function Register() {
     if (user) {
       router.push("/");
     }
-  }, [user]);
+  }, [user, router]);
 
   return (
     <div className="pt-16">
@@ -59,7 +59,10 @@ export default function Register() {
             )}
             <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="fullName" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                <label
+                  htmlFor="fullName"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
                   Your name
                 </label>
                 <input
@@ -74,7 +77,10 @@ export default function Register() {
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                <label
+                  htmlFor="email"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
                   Your email
                 </label>
                 <input
@@ -89,7 +95,10 @@ export default function Register() {
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                <label
+                  htmlFor="password"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
                   Password
                 </label>
                 <input
@@ -104,7 +113,10 @@ export default function Register() {
                 />
               </div>
               <div>
-                <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                <label
+                  htmlFor="confirm-password"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
                   Confirm password
                 </label>
                 <input
@@ -118,12 +130,18 @@ export default function Register() {
                   required
                 />
               </div>
-              <button type="submit" className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700">
+              <button
+                type="submit"
+                className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700"
+              >
                 Create an account
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                Already have an account? {" "}
-                <Link href="/login" className="font-medium text-primary-600 hover:underline dark:text-primary-500">
+                Already have an account?{" "}
+                <Link
+                  href="/login"
+                  className="font-medium text-primary-600 hover:underline dark:text-primary-500"
+                >
                   Login here
                 </Link>
               </p>

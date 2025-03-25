@@ -49,7 +49,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       } else {
         localStorage.removeItem("token");
       }
-    } catch (error) {
+    } catch {
       localStorage.removeItem("token");
     } finally {
       setLoading(false);
@@ -158,7 +158,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to send reset password email");
       }
-    } catch (error) {
+    } catch {
       throw new Error("Failed to send reset link. Please try again.");
     }
   };
@@ -173,15 +173,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
           new_password: newPassword,
         }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to reset password");
       }
-    } catch (error) {
+    } catch {
       throw new Error("Failed to reset password. Please try again.");
     }
-  };  
+  };
 
   return (
     <UserContext.Provider

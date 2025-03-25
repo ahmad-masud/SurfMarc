@@ -49,7 +49,7 @@ export default function ResetPassword() {
       await resetPasswordConfirm(accessToken, password);
       setMessage("Password successfully reset! Redirecting...");
       setTimeout(() => router.push("/login"), 3000);
-    } catch (err) {
+    } catch {
       setError("Failed to reset password. Please try again.");
     } finally {
       setLoading(false);
@@ -86,7 +86,7 @@ export default function ResetPassword() {
                     <input
                       type="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={e => setPassword(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                       required
                     />
@@ -98,7 +98,7 @@ export default function ResetPassword() {
                     <input
                       type="password"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={e => setConfirmPassword(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                       required
                     />
@@ -111,7 +111,7 @@ export default function ResetPassword() {
                     {loading ? "Resetting..." : "Reset Password"}
                   </button>
                   <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                    Remembered your password? {" "}
+                    Remembered your password?{" "}
                     <Link
                       href="/login"
                       className="font-medium text-primary-600 hover:underline dark:text-primary-500"

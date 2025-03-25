@@ -17,7 +17,7 @@ export default function Home() {
     setIsLoading(true);
     setError("");
     setProductData(null);
-  
+
     try {
       const response = await fetch("http://localhost:8000/api/v1/products/analyze", {
         method: "POST",
@@ -27,19 +27,19 @@ export default function Home() {
         },
         body: JSON.stringify({ url, pages, model }),
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to analyze product");
       }
-  
+
       const data = await response.json();
       setProductData(data);
-    } catch (err) {
+    } catch {
       setError("Failed to analyze product. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };  
+  };
 
   if (loading) {
     return (

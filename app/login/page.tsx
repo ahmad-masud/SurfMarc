@@ -20,7 +20,7 @@ export default function Login() {
       await login(email, password);
       // Redirect to home page after successful login
       router.push("/");
-    } catch (err) {
+    } catch {
       setError("Invalid email or password");
     }
   };
@@ -29,7 +29,7 @@ export default function Login() {
     if (user) {
       router.push("/");
     }
-  }, [user]);
+  }, [user, router]);
 
   return (
     <div className="pt-16">
@@ -111,7 +111,7 @@ export default function Login() {
                 Sign in
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                Don't have an account yet?{" "}
+                Don&rsquo;t have an account yet?{" "}
                 <Link
                   href="/register"
                   className="font-medium text-primary-600 hover:underline dark:text-primary-500"

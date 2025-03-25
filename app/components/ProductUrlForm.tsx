@@ -25,7 +25,7 @@ export default function ProductUrlForm({ onSubmit, isLoading }: ProductUrlFormPr
     try {
       await onSubmit(url, pages, model);
       setUrl("");
-    } catch (err) {
+    } catch {
       setError("Failed to analyze product. Please try again.");
     }
   };
@@ -40,8 +40,8 @@ export default function ProductUrlForm({ onSubmit, isLoading }: ProductUrlFormPr
           Paste the URL of a product page (e.g., from Amazon) to analyze customer reviews using AI.
         </p>
         <p>
-          You can select how many pages of reviews to analyze (each page typically includes ~10 reviews),
-          and choose the sentiment analysis model you prefer.
+          You can select how many pages of reviews to analyze (each page typically includes ~10
+          reviews), and choose the sentiment analysis model you prefer.
         </p>
         <p>
           The analysis will include sentiment classification, bias detection, credibility scoring,
@@ -52,7 +52,10 @@ export default function ProductUrlForm({ onSubmit, isLoading }: ProductUrlFormPr
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* URL input */}
         <div>
-          <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="url"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             Product URL
           </label>
           <div className="flex gap-2">
@@ -78,7 +81,10 @@ export default function ProductUrlForm({ onSubmit, isLoading }: ProductUrlFormPr
 
         {/* Number of Pages */}
         <div>
-          <label htmlFor="pages" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="pages"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             Number of Pages (10 reviews per page)
           </label>
           <select
@@ -89,14 +95,19 @@ export default function ProductUrlForm({ onSubmit, isLoading }: ProductUrlFormPr
             disabled={isLoading}
           >
             {[1, 2, 3, 4, 5].map(p => (
-              <option key={p} value={p}>{p} Page{p > 1 && "s"}</option>
+              <option key={p} value={p}>
+                {p} Page{p > 1 && "s"}
+              </option>
             ))}
           </select>
         </div>
 
         {/* Model Selection */}
         <div>
-          <label htmlFor="model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="model"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             Sentiment Model
           </label>
           <select
@@ -106,8 +117,12 @@ export default function ProductUrlForm({ onSubmit, isLoading }: ProductUrlFormPr
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white"
             disabled={isLoading}
           >
-            <option value="distilbert-base-uncased-finetuned-sst-2-english">DistilBERT (SST-2)</option>
-            <option value="nlptown/bert-base-multilingual-uncased-sentiment">BERT Multilingual</option>
+            <option value="distilbert-base-uncased-finetuned-sst-2-english">
+              DistilBERT (SST-2)
+            </option>
+            <option value="nlptown/bert-base-multilingual-uncased-sentiment">
+              BERT Multilingual
+            </option>
             <option value="cardiffnlp/twitter-roberta-base-sentiment">RoBERTa Twitter</option>
           </select>
         </div>
