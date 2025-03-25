@@ -20,7 +20,7 @@ export default function Home() {
     setProductData(null);
 
     try {
-      const response = await fetch(`${process.env.SERVER_URL}/api/v1/products/analyze`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/v1/products/analyze`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
