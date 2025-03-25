@@ -12,6 +12,8 @@ product_analyzer = ProductAnalyzer()
 
 class ProductAnalysisRequest(BaseModel):
     url: HttpUrl
+    pages: int = 1
+    model: str = "distilbert-base-uncased-finetuned-sst-2-english"
 
 class ProductAnalysisResponse(BaseModel):
     product_reviews: List[Dict[str, Any]]
@@ -24,25 +26,17 @@ async def analyze_product(
     request: ProductAnalysisRequest,
     current_user: User = Depends(get_current_user)
 ):
-    """Analyze product reviews from a given product URL."""
     try:
-        # Step 1: Extract reviews
-        product_reviews = await product_analyzer.extract_reviews(request.url)
-        
-        # Ensure product_reviews contains a list of review texts
+        analyzer = ProductAnalyzer(model_name=request.model)
+
+        product_reviews = await analyzer.extract_reviews(request.url, request.pages)
         if not product_reviews:
             raise HTTPException(status_code=400, detail="No reviews found for analysis.")
 
-        # Step 2: Perform sentiment analysis
-        sentiment_analysis = await product_analyzer.analyze_sentiment(product_reviews)
+        sentiment_analysis = await analyzer.analyze_sentiment(product_reviews)
+        aspect_analysis = analyzer.detect_bias(product_reviews)
+        credibility_scores = analyzer.assess_credibility(product_reviews)
 
-        # Step 3: Detect bias
-        aspect_analysis = product_analyzer.detect_bias(product_reviews)
-
-        # Step 4: Assess credibility
-        credibility_scores = product_analyzer.assess_credibility(product_reviews)
-
-        # Step 5: Merge all review data into one structure
         processed_reviews = []
         for i, review in enumerate(product_reviews):
             processed_reviews.append({
@@ -53,8 +47,13 @@ async def analyze_product(
                 "credibility_score": credibility_scores[i]["credibility_score"] if i < len(credibility_scores) else 0
             })
 
-        return ProductAnalysisResponse(product_reviews=processed_reviews)
-    
+        return ProductAnalysisResponse(
+            product_reviews=processed_reviews,
+            sentiment_analysis=sentiment_analysis,
+            aspect_analysis=aspect_analysis,
+            credibility_scores=credibility_scores
+        )
+
     except Exception as e:
         print(f"\n=== Error Details ===\nError Type: {type(e).__name__}\nError Message: {str(e)}\n")
         traceback.print_exc()

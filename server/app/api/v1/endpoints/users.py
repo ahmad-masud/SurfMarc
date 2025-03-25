@@ -19,19 +19,26 @@ async def update_user(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Update current user information.
+    Update current user information, including optional email update.
     """
     try:
         update_data = user_update.dict(exclude_unset=True)
+
+        # Step 1: Update email if requested
         if "email" in update_data:
+            print(f"Updating email to {update_data['email']}")
             email_update_response = supabase.auth.update_user({"email": update_data["email"]})
 
-            if "error" in email_update_response:
+            if hasattr(email_update_response, "error") and email_update_response.error:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Failed to update email in authentication system"
                 )
 
+        # Step 2: Remove email from DB update payload
+        update_data.pop("email", None)
+
+        # Step 3: Update user profile in your DB
         response = supabase.table("users").update(update_data).eq("id", current_user.id).execute()
 
         if not response.data:
@@ -40,11 +47,19 @@ async def update_user(
                 detail="User not found"
             )
 
-        return User(**response.data[0])
-        
+        updated_user = response.data[0]
+
+        # Step 4: Get the updated email from Supabase Auth
+        auth_user = supabase.auth.get_user()
+        updated_user["email"] = auth_user.user.email if auth_user and auth_user.user else None
+
+        # Step 5: Return full user object
+        return User(**updated_user)
+
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Update user error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
@@ -56,23 +71,41 @@ async def change_password(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Change user password.
+    Change user password by verifying the current one first.
+    Fetch email from Supabase Auth (not DB).
     """
-    try:     
-        auth_response = supabase.auth.sign_in_with_password({
-            "email": current_user.email,
-            "password": password_change.current_password,
+    try:
+        # Step 1: Get the authenticated user's info from Supabase
+        user_info = supabase.auth.get_user()
+        if not user_info.user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not fetch user info from Supabase"
+            )
+
+        user_email = user_info.user.email
+        if not user_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User email not available"
+            )
+
+        # Step 2: Re-authenticate using current password
+        auth_check = supabase.auth.sign_in_with_password({
+            "email": user_email,
+            "password": password_change.current_password
         })
 
-        if not auth_response.user:
+        if not auth_check.user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Current password is incorrect"
             )
-            
-        update_response = supabase.auth.update_user(
-            {"password": password_change.new_password}
-        )
+
+        # Step 3: Proceed to update the password
+        update_response = supabase.auth.update_user({
+            "password": password_change.new_password
+        })
 
         if hasattr(update_response, 'error') and update_response.error:
             raise HTTPException(
@@ -81,7 +114,7 @@ async def change_password(
             )
 
         return {"message": "Password updated successfully"}
-        
+
     except HTTPException:
         raise
     except Exception as e:

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useUser } from "./context/UserContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Link from "next/link";
-import Image from "next/image";
 import ProductUrlForm from "./components/ProductUrlForm";
 import ProductAnalysis from "./components/ProductAnalysis";
 
@@ -14,11 +13,11 @@ export default function Home() {
   const [productData, setProductData] = useState<any>(null);
   const [error, setError] = useState("");
 
-  const handleAnalyzeProduct = async (url: string) => {
+  const handleAnalyzeProduct = async (url: string, pages: number, model: string) => {
     setIsLoading(true);
     setError("");
     setProductData(null);
-
+  
     try {
       const response = await fetch("http://localhost:8000/api/v1/products/analyze", {
         method: "POST",
@@ -26,13 +25,13 @@ export default function Home() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, pages, model }),
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to analyze product");
       }
-
+  
       const data = await response.json();
       setProductData(data);
     } catch (err) {
@@ -40,7 +39,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  };
+  };  
 
   if (loading) {
     return (
@@ -88,26 +87,16 @@ export default function Home() {
             </p>
             <div className="space-y-4 sm:flex sm:space-y-0 sm:space-x-4">
               <Link href="/register">
-                <button className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-3 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                <button className="inline-flex items-center justify-center px-5 py-3 text-base font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg dark:bg-blue-600 dark:hover:bg-blue-700">
                   Get Started
                 </button>
               </Link>
               <Link href="/about">
-                <button className="inline-flex items-center justify-center px-5 py-3 text-base font-medium text-center text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
+                <button className="inline-flex items-center justify-center px-5 py-3 text-base font-medium text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-100 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700">
                   Learn More
                 </button>
               </Link>
             </div>
-          </div>
-          <div className="hidden lg:mt-0 lg:col-span-5 lg:flex">
-            <Image
-              src="/hero.png"
-              alt="SurfMarc Hero"
-              width={800}
-              height={400}
-              className="w-full h-auto rounded-lg shadow-lg"
-              priority
-            />
           </div>
         </div>
       </section>
@@ -197,7 +186,7 @@ export default function Home() {
               decisions with SurfMarc.
             </p>
             <Link href="/register">
-              <button className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-3 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+              <button className="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-3 text-center dark:bg-blue-600 dark:hover:bg-blue-700">
                 Get Started Free
               </button>
             </Link>

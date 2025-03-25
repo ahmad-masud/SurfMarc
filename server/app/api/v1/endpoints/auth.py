@@ -41,7 +41,7 @@ async def login(request: LoginRequest) -> Any:
         # Create our own JWT token
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            data={"sub": user_data.data["email"]}, expires_delta=access_token_expires
+            data={"sub": user_data.data["id"]}, expires_delta=access_token_expires
         )
         
         return {
@@ -59,59 +59,66 @@ async def login(request: LoginRequest) -> Any:
 @router.post("/register", response_model=dict)
 async def register(user_in: UserCreate) -> Any:
     """
-    Register a new user without authentication or access token.
+    Register a new user using Supabase Auth only.
+    Does not store email in the local database.
     """
     try:
-        existing_user = supabase.table("users").select("*").eq("email", user_in.email).execute()
-        if existing_user.data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered",
-            )
-
+        print("Attempting to register user with Supabase Auth...")
         auth_response = supabase.auth.sign_up({
             "email": user_in.email,
             "password": user_in.password,
         })
-        
+        print(f"Supabase Auth sign_up response: {auth_response}")
+
         if not auth_response or not auth_response.user:
+            print("Supabase did not return a user object.")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to create user",
             )
 
+        # Prepare user data for local DB (no email)
         user_data = {
             "id": auth_response.user.id,
-            "email": user_in.email,
             "full_name": user_in.full_name,
             "is_active": user_in.is_active,
         }
-        
+        print(f"Prepared user_data for DB insert: {user_data}")
+
         try:
             db_response = supabase.table("users").insert(user_data).execute()
+            print(f"DB insert response: {db_response}")
 
             if not db_response.data:
+                print("DB insert failed. Deleting user from Supabase Auth...")
                 try:
-                    supabase.auth.admin.delete_user(auth_response.user.id)  
+                    supabase.auth.admin.delete_user(auth_response.user.id)
+                    print("User deleted from Supabase Auth after DB failure.")
                 except Exception as e:
+                    print("Failed to clean up user from Supabase Auth:", str(e))
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Failed to create user in database",
                     )
         except Exception as db_error:
+            print("Exception during DB insert:", str(db_error))
             try:
                 supabase.auth.admin.delete_user(auth_response.user.id)
+                print("Rolled back user in Supabase Auth.")
             except Exception as e:
+                print("Failed to clean up user from Supabase Auth after DB error:", str(e))
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Database error: {str(db_error)}",
                 )
 
+        print("User successfully registered.")
         return {"message": "User registered successfully"}
 
     except HTTPException:
         raise
     except Exception as e:
+        print("Unexpected exception during registration:", str(e))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),

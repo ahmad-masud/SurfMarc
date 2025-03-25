@@ -3,9 +3,9 @@ from pydantic import BaseModel, EmailStr
 
 class User(BaseModel):
     id: str
-    email: EmailStr
     full_name: str
     is_active: bool = True
+    email: Optional[EmailStr] = None
 
     class Config:
         from_attributes = True

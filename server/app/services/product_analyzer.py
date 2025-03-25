@@ -8,14 +8,13 @@ import re
 import torch
 
 class ProductAnalyzer:
-    def __init__(self):
+    def __init__(self, model_name: str = "distilbert-base-uncased-finetuned-sst-2-english"):
         try:
             device = 0 if torch.cuda.is_available() else -1
 
             self.sentiment_analyzer = pipeline(
                 "sentiment-analysis",
-                model="distilbert-base-uncased-finetuned-sst-2-english",
-                revision="714eb0f",
+                model=model_name,
                 device=device
             )
             self.bias_classifier = pipeline(
@@ -26,29 +25,40 @@ class ProductAnalyzer:
         except Exception as e:
             raise Exception(f"Failed to initialize ProductAnalyzer: {str(e)}\n{traceback.format_exc()}")
 
-    async def extract_reviews(self, url: str) -> List[Dict[str, Any]]:
-        """Scrape product reviews with star ratings from a given URL."""
+    async def extract_reviews(self, url: str, pages: int = 1) -> List[Dict[str, Any]]:
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 context = await browser.new_context()
                 page = await context.new_page()
-                await page.goto(url, timeout=10000)
+                await page.goto(url, timeout=15000)
                 await page.wait_for_load_state("domcontentloaded")
 
-                product_reviews = await page.evaluate("""() => {
-                    return Array.from(document.querySelectorAll('.review')).map(review => ({
-                        text: review.querySelector('.review-text, .a-size-base.review-text-content')?.innerText.trim() || '',
-                        rating: review.querySelector('.review-rating')?.innerText.trim().charAt(0) || '0'
-                    })).filter(review => review.text.length > 10);
-                }""")
+                all_reviews = []
+                for _ in range(pages):
+                    # Scrape reviews on current page
+                    reviews = await page.evaluate("""() => {
+                        return Array.from(document.querySelectorAll('.review')).map(review => ({
+                            text: review.querySelector('.review-text, .a-size-base.review-text-content')?.innerText.trim() || '',
+                            rating: review.querySelector('.review-rating')?.innerText.trim().charAt(0) || '0'
+                        })).filter(review => review.text.length > 10);
+                    }""")
+                    all_reviews.extend(reviews)
+
+                    # Try to go to the next page
+                    next_button = await page.query_selector("li.a-last a")
+                    if next_button:
+                        await next_button.click()
+                        await page.wait_for_timeout(1500)  # slight wait for content to load
+                    else:
+                        break
 
                 await browser.close()
-                return [
-                    {"product_review": review["text"], "rating": int(review["rating"])}
-                    for review in product_reviews if review["text"]
-                ]
 
+                return [
+                    {"product_review": r["text"], "rating": int(r["rating"])}
+                    for r in all_reviews if r["text"]
+                ]
         except Exception as e:
             print(f"Error extracting reviews: {str(e)}")
             return []
