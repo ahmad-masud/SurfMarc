@@ -11,8 +11,11 @@ class Settings(BaseModel):
     DESCRIPTION: str = "SurfMarc API for product information retrieval"
     API_V1_STR: str = "/api/v1"
     
+    # URL
+    CLIENT_URL: str = os.getenv("CLIENT_URL", "http://localhost:3000")
+
     # CORS Configuration
-    CORS_ORIGINS: List[AnyHttpUrl] = ["http://localhost:3000"]
+    CORS_ORIGINS: List[AnyHttpUrl] = [CLIENT_URL]
     
     # JWT Configuration
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")  # Change this in production

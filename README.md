@@ -60,8 +60,9 @@ SECRET_KEY=your_secret_key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=43200
 
-# Frontend Configuration
-NEXT_PUBLIC_API_URL=http://localhost:8000
+# URLS
+SERVER_URL=http://localhost:8000
+CLIENT_URL=http://localhost:3000
 ```
 
 ## Getting Started

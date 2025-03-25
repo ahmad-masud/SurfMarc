@@ -40,7 +40,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const fetchUserData = async (token: string) => {
     try {
-      const response = await fetch("http://localhost:8000/api/v1/users/me", {
+      const response = await fetch(`${process.env.SERVER_URL}/api/v1/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -57,7 +57,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (email: string, password: string) => {
-    const response = await fetch("http://localhost:8000/api/v1/auth/login", {
+    const response = await fetch(`${process.env.SERVER_URL}/api/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -71,7 +71,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (email: string, password: string, fullName: string) => {
-    const response = await fetch("http://localhost:8000/api/v1/auth/register", {
+    const response = await fetch(`${process.env.SERVER_URL}/api/v1/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, full_name: fullName }),
@@ -89,7 +89,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Not authenticated");
 
-    const response = await fetch("http://localhost:8000/api/v1/users/me", {
+    const response = await fetch(`${process.env.SERVER_URL}/api/v1/users/me`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -113,7 +113,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Not authenticated");
 
-    const response = await fetch("http://localhost:8000/api/v1/users/change-password", {
+    const response = await fetch(`${process.env.SERVER_URL}/api/v1/users/change-password`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -132,7 +132,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Not authenticated");
 
-    const response = await fetch("http://localhost:8000/api/v1/users/me", {
+    const response = await fetch(`${process.env.SERVER_URL}/api/v1/users/me`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -148,7 +148,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
-      const response = await fetch("http://localhost:8000/api/v1/auth/reset-password", {
+      const response = await fetch(`${process.env.SERVER_URL}/api/v1/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -165,7 +165,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const resetPasswordConfirm = async (accessToken: string, newPassword: string) => {
     try {
-      const response = await fetch("http://localhost:8000/api/v1/auth/update-password", {
+      const response = await fetch(`${process.env.SERVER_URL}/api/v1/auth/update-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

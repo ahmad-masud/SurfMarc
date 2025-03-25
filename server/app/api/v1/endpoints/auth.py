@@ -130,7 +130,7 @@ async def reset_password(request: PasswordResetRequest):
     Request a password reset email.
     """
     try:
-        reset_redirect_url = "http://localhost:3000/reset-password"
+        reset_redirect_url = settings.CLIENT_URL + "/reset-password"
 
         response = supabase.auth.reset_password_email(request.email, {"redirect_to": reset_redirect_url})
 
