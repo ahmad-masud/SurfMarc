@@ -1,193 +1,142 @@
 from typing import List, Dict, Any
-import json
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 from transformers import pipeline
-import faiss
-import numpy as np
-from scrapy import Spider, Request
-from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
-import asyncio
-import aiohttp
-from slugify import slugify
+from collections import Counter
 import traceback
+import re
+import torch
 
 class ProductAnalyzer:
     def __init__(self):
         try:
+            device = 0 if torch.cuda.is_available() else -1
+
             self.sentiment_analyzer = pipeline(
                 "sentiment-analysis",
                 model="distilbert-base-uncased-finetuned-sst-2-english",
-                revision="af0f99b",
-                force_download=True
+                revision="714eb0f",
+                device=device
             )
-            self.zero_shot_classifier = pipeline(
+            self.bias_classifier = pipeline(
                 "zero-shot-classification",
                 model="facebook/bart-large-mnli",
-                revision="c626438",
-                force_download=True
+                device=device
             )
         except Exception as e:
             raise Exception(f"Failed to initialize ProductAnalyzer: {str(e)}\n{traceback.format_exc()}")
 
-    async def scrape_product(self, url: str) -> Dict[str, Any]:
-        """Scrape product information using Playwright"""
+    async def extract_reviews(self, url: str) -> List[Dict[str, Any]]:
+        """Scrape product reviews with star ratings from a given URL."""
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
-                context = await browser.new_context(
-                    viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                )
+                context = await browser.new_context()
                 page = await context.new_page()
-                
-                try:
-                    # Set a shorter timeout for navigation
-                    await page.goto(url, timeout=10000)
-                    
-                    # Wait for the page to be interactive
-                    await page.wait_for_load_state("domcontentloaded", timeout=10000)
-                    
-                    # Extract product information with a more robust selector strategy
-                    product_data = await page.evaluate("""() => {
-                        const getText = (selector) => {
-                            const element = document.querySelector(selector);
-                            return element ? element.textContent.trim() : '';
-                        };
-                        
-                        const getSpecs = () => {
-                            const specs = [];
-                            // Look for common specification patterns
-                            const specElements = document.querySelectorAll('table, dl, .specifications, .product-specs');
-                            specElements.forEach(element => {
-                                const rows = element.querySelectorAll('tr, dt, .spec-row');
-                                rows.forEach(row => {
-                                    const name = row.querySelector('th, dt, .spec-name')?.textContent.trim();
-                                    const value = row.querySelector('td, dd, .spec-value')?.textContent.trim();
-                                    if (name && value) {
-                                        specs.push({ name, value });
-                                    }
-                                });
-                            });
-                            return specs;
-                        };
-                        
-                        return {
-                            title: document.title,
-                            price: getText('[data-price], .price, .product-price, [itemprop="price"]'),
-                            description: getText('[data-description], .description, .product-description, [itemprop="description"]'),
-                            specifications: getSpecs()
-                        };
-                    }""")
-                    
-                    return product_data
-                    
-                except Exception as e:
-                    print(f"Error during page scraping: {str(e)}")
-                    # Return a basic product data structure if scraping fails
-                    return {
-                        'title': 'Product Title Not Found',
-                        'price': 'Price Not Found',
-                        'description': 'Description Not Found',
-                        'specifications': []
-                    }
-                finally:
-                    await context.close()
-                    await browser.close()
-                    
-        except Exception as e:
-            raise Exception(f"Failed to scrape product: {str(e)}\n{traceback.format_exc()}")
+                await page.goto(url, timeout=10000)
+                await page.wait_for_load_state("domcontentloaded")
 
-    async def analyze_sentiment(self, reviews: List[str]) -> Dict[str, Any]:
-        """Analyze sentiment of product reviews"""
+                product_reviews = await page.evaluate("""() => {
+                    return Array.from(document.querySelectorAll('.review')).map(review => ({
+                        text: review.querySelector('.review-text, .a-size-base.review-text-content')?.innerText.trim() || '',
+                        rating: review.querySelector('.review-rating')?.innerText.trim().charAt(0) || '0'
+                    })).filter(review => review.text.length > 10);
+                }""")
+
+                await browser.close()
+                return [
+                    {"product_review": review["text"], "rating": int(review["rating"])}
+                    for review in product_reviews if review["text"]
+                ]
+
+        except Exception as e:
+            print(f"Error extracting reviews: {str(e)}")
+            return []
+
+    async def analyze_sentiment(self, reviews: List[str]) -> List[Dict[str, Any]]:
+        """Analyze sentiment of product reviews, ensuring text truncation and correct output format"""
         try:
             sentiments = []
             for review in reviews:
-                result = self.sentiment_analyzer(review)
-                sentiments.append(result[0])
+                if not isinstance(review, str):  # Ensure review is a string
+                    continue
+                
+                # Truncate long reviews to prevent exceeding model limits
+                truncated_review = review[:450]  
+
+                result = self.sentiment_analyzer(truncated_review)
+                sentiments.append({
+                    "review": review, 
+                    "sentiment": result[0]  # Ensure this is properly formatted
+                })
             
-            # Calculate overall sentiment
-            positive_count = sum(1 for s in sentiments if s['label'] == 'POSITIVE')
-            negative_count = sum(1 for s in sentiments if s['label'] == 'NEGATIVE')
-            
-            return {
-                'overall_sentiment': 'POSITIVE' if positive_count > negative_count else 'NEGATIVE',
-                'positive_count': positive_count,
-                'negative_count': negative_count,
-                'sentiment_details': sentiments
-            }
+            return sentiments  # Must return a list, not a dict
         except Exception as e:
             raise Exception(f"Failed to analyze sentiment: {str(e)}\n{traceback.format_exc()}")
 
-    async def classify_product(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Classify product using zero-shot classification"""
-        try:
-            product_text = f"{product_data['title']} {product_data['description']}"
-            categories = [
-                "electronics", "clothing", "home", "beauty", "sports",
-                "books", "toys", "food", "automotive", "health"
-            ]
-            
-            result = self.zero_shot_classifier(product_text, categories)
-            return {
-                'categories': dict(zip(result['labels'], result['scores']))
-            }
-        except Exception as e:
-            raise Exception(f"Failed to classify product: {str(e)}\n{traceback.format_exc()}")
+    def detect_bias(self, reviews: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Detect bias in reviews using zero-shot classification."""
+        bias_labels = ["exaggeration", "subjectivity", "overly emotional", "neutral"]
+        results = []
 
-    async def analyze_product(self, url: str) -> Dict[str, Any]:
-        """Main method to analyze a product"""
-        try:
-            # Scrape product data
-            product_data = await self.scrape_product(url)
-            
-            # Analyze sentiment (assuming we have reviews)
-            sentiment_analysis = await self.analyze_sentiment([])  # Add actual reviews here
-            
-            # Classify product
-            classification = await self.classify_product(product_data)
-            
-            return {
-                'product': product_data,
-                'sentiment_analysis': sentiment_analysis,
-                'classification': classification
-            }
-        except Exception as e:
-            raise Exception(f"Failed to analyze product: {str(e)}\n{traceback.format_exc()}")
+        for review_data in reviews:
+            review = review_data.get("product_review", "")
 
-class ProductSpider(Spider):
-    name = 'product_spider'
+            if not isinstance(review, str) or not review.strip():  # Ensure it's a non-empty string
+                continue
+            
+            classification = self.bias_classifier(review, bias_labels)
+            
+            results.append({
+                "review": review,
+                "bias_scores": dict(zip(classification["labels"], classification["scores"]))
+            })
+        
+        return results
     
-    def __init__(self, url=None, *args, **kwargs):
-        super(ProductSpider, self).__init__(*args, **kwargs)
-        self.start_urls = [url] if url else []
-        self.product_data = {}
+    def assess_credibility(self, reviews: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Assess credibility of reviews based on various linguistic factors."""
+        results = []
+        review_texts = [r.get("product_review", "").strip().lower() for r in reviews]
 
-    def parse(self, response):
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Extract product data (customize based on target website)
-        self.product_data = {
-            'title': soup.select_one('h1').text.strip(),
-            'price': soup.select_one('[data-price]').text.strip(),
-            'description': soup.select_one('[data-description]').text.strip(),
-            'images': [img['src'] for img in soup.select('img[data-product-image]')],
-            'specifications': [
-                {
-                    'name': spec.select_one('[data-spec-name]').text.strip(),
-                    'value': spec.select_one('[data-spec-value]').text.strip()
-                }
-                for spec in soup.select('[data-specification]')
-            ]
-        }
-        
-        return self.product_data
+        # Count duplicate reviews
+        review_counts = Counter(review_texts)
 
-async def scrape_with_scrapy(url: str) -> Dict[str, Any]:
-    """Scrape product data using Scrapy"""
-    process = CrawlerProcess(get_project_settings())
-    spider = ProductSpider(url=url)
-    process.crawl(spider)
-    process.start()
-    return spider.product_data 
+        for review_data in reviews:
+            review = review_data.get("product_review", "").strip()
+            
+            if not isinstance(review, str) or not review:
+                continue
+            
+            credibility_score = 100  # Start with a perfect score
+
+            # 1️⃣ Short reviews (less than 20 words) are suspicious
+            if len(review.split()) < 20:
+                credibility_score -= 30
+            
+            # 2️⃣ Fake-sounding words (exaggeration, marketing words)
+            if re.search(r'\b(BUY|SCAM|FAKE|BEST|AMAZING|PERFECT|MUST-HAVE|LIFE-CHANGING|WASTE OF MONEY|DO NOT BUY|GARBAGE)\b', review, re.IGNORECASE):
+                credibility_score -= 25
+
+            # 3️⃣ Excessive punctuation or capitalization
+            if re.search(r'!{3,}|\?{3,}|\b[A-Z]{5,}\b', review):
+                credibility_score -= 20
+            
+            # 4️⃣ Repetitive words (e.g., "best best best")
+            words = review.lower().split()
+            most_common_word, count = Counter(words).most_common(1)[0]
+            if count > 3:
+                credibility_score -= 20  # Overuse of a word looks fake
+
+            # 5️⃣ Duplicate reviews are penalized
+            if review_counts[review.lower()] > 1:
+                credibility_score -= 40  # Identical reviews = likely spam
+            
+            credibility_score = max(0, credibility_score)  # Ensure score isn't negative
+
+            results.append({
+                "review": review,
+                "credibility_score": credibility_score
+            })
+        
+        return results

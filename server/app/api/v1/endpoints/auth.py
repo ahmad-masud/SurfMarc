@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 from app.core.config import settings
 from app.core.security import create_access_token
-from app.schemas.user import User, UserCreate, Token, LoginRequest, PasswordResetRequest
+from app.schemas.user import User, UserCreate, Token, LoginRequest, PasswordResetRequest, UpdatePasswordRequest
 from app.db.supabase import supabase
 
 router = APIRouter()
@@ -56,42 +56,30 @@ async def login(request: LoginRequest) -> Any:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-@router.post("/register", response_model=Token)
+@router.post("/register", response_model=dict)
 async def register(user_in: UserCreate) -> Any:
     """
-    Register new user.
+    Register a new user without authentication or access token.
     """
     try:
-        print(f"Starting registration for email: {user_in.email}")  # Debug log
-        
-        # First check if user exists in our database
-        print("Checking if user exists in database...")  # Debug log
         existing_user = supabase.table("users").select("*").eq("email", user_in.email).execute()
         if existing_user.data:
-            print(f"User exists in database with email: {user_in.email}")  # Debug log
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered",
             )
-        
-        print("Creating user in Supabase Auth...")  # Debug log
-        # Create user in Supabase Auth
+
         auth_response = supabase.auth.sign_up({
             "email": user_in.email,
             "password": user_in.password,
         })
         
         if not auth_response or not auth_response.user:
-            print("Failed to create user in Supabase Auth")  # Debug log
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to create user",
             )
-            
-        print(f"User created in Supabase Auth with ID: {auth_response.user.id}")  # Debug log
-        
-        # Create user in our database
-        print("Creating user in database...")  # Debug log
+
         user_data = {
             "id": auth_response.user.id,
             "email": user_in.email,
@@ -101,55 +89,33 @@ async def register(user_in: UserCreate) -> Any:
         
         try:
             db_response = supabase.table("users").insert(user_data).execute()
-            print(f"Database response: {db_response}")  # Debug log
-            
+
             if not db_response.data:
-                print("Failed to create user in database")  # Debug log
-                # If database insert fails, we should clean up the auth user
                 try:
-                    supabase.auth.admin.delete_user(auth_response.user.id)
-                    print("Cleaned up auth user after database failure")  # Debug log
-                except Exception as cleanup_error:
-                    print(f"Failed to clean up auth user: {str(cleanup_error)}")  # Debug log
-                
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Failed to create user in database",
-                )
+                    supabase.auth.admin.delete_user(auth_response.user.id)  
+                except Exception as e:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Failed to create user in database",
+                    )
         except Exception as db_error:
-            print(f"Database error: {str(db_error)}")  # Debug log
-            # If database insert fails, we should clean up the auth user
             try:
                 supabase.auth.admin.delete_user(auth_response.user.id)
-                print("Cleaned up auth user after database error")  # Debug log
-            except Exception as cleanup_error:
-                print(f"Failed to clean up auth user: {str(cleanup_error)}")  # Debug log
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Database error: {str(db_error)}",
-            )
-            
-        print("Creating access token...")  # Debug log
-        # Create access token
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": user_in.email}, expires_delta=access_token_expires
-        )
-        
-        print("Registration successful")  # Debug log
-        return {
-            "access_token": access_token,
-            "token_type": "bearer"
-        }
-        
+            except Exception as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Database error: {str(db_error)}",
+                )
+
+        return {"message": "User registered successfully"}
+
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Registration error: {str(e)}")  # Debug log
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        ) 
+        )
 
 @router.post("/reset-password")
 async def reset_password(request: PasswordResetRequest):
@@ -157,7 +123,9 @@ async def reset_password(request: PasswordResetRequest):
     Request a password reset email.
     """
     try:
-        response = supabase.auth.reset_password_for_email(request.email)
+        reset_redirect_url = "http://localhost:3000/reset-password"
+
+        response = supabase.auth.reset_password_email(request.email, {"redirect_to": reset_redirect_url})
 
         if hasattr(response, "error") and response.error:
             raise HTTPException(
@@ -167,6 +135,49 @@ async def reset_password(request: PasswordResetRequest):
 
         return {"message": "Password reset email sent successfully"}
 
+    except HTTPException as http_error:
+        raise
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+@router.post("/update-password")
+async def update_password(request: UpdatePasswordRequest):
+    """
+    Authenticate user with the access token and update their password.
+    """
+    try:
+
+        # Authenticate the user using the access token
+        user_response = supabase.auth.get_user(request.access_token)
+
+        if not hasattr(user_response, "user") or not user_response.user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired access token.",
+            )
+
+        user_id = user_response.user.id  # Extract user ID
+
+        # Update password for authenticated user
+        update_response = supabase.auth.admin.update_user_by_id(
+            user_id,  # Use the authenticated user ID
+            {"password": request.new_password}
+        )
+
+        if hasattr(update_response, "error") and update_response.error:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to update password.",
+            )
+
+        return {"message": "Password has been successfully updated."}
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

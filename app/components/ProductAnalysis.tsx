@@ -3,116 +3,92 @@
 import { useState } from "react";
 
 interface ProductAnalysisProps {
-  data: {
-    product: {
-      title: string;
-      price: string;
-      description: string;
-      specifications: Array<{
-        name: string;
-        value: string;
-      }>;
-    };
-    sentiment_analysis: {
-      overall_sentiment: string;
-      positive_count: number;
-      negative_count: number;
-      sentiment_details: Array<{
+  data?: {
+    product_reviews?: Array<{
+      product_review?: string;
+      rating?: number;
+      sentiment?: {
         label: string;
         score: number;
-      }>;
-    };
-    classification: {
-      categories: Record<string, number>;
-    };
+      };
+      bias_scores?: Record<string, number>;
+      credibility_score?: number;
+    }>;
   };
 }
 
 export default function ProductAnalysis({ data }: ProductAnalysisProps) {
+  const [showMoreReviews, setShowMoreReviews] = useState(false);
+
+  if (!data) {
+    return <div className="text-red-500">No product data available.</div>;
+  }
+
   return (
     <div className="space-y-8">
-      {/* Main Product Section */}
+      {/* Product Reviews */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <div className="space-y-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{data.product.title}</h1>
-          <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
-            {data.product.price}
-          </p>
-          <p className="text-gray-600 dark:text-gray-300">{data.product.description}</p>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Product Reviews</h2>
+        <div className="grid grid-cols-1 gap-4">
+          {(showMoreReviews ? data.product_reviews : data.product_reviews?.slice(0, 5))?.map((review, index) => {
+            const rating = review.rating ?? 0;
+            return (
+              <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                <p className="text-gray-600 dark:text-gray-300">{review.product_review}</p>
 
-          {/* Specifications */}
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Specifications
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              {data.product.specifications.map((spec, index) => (
-                <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{spec.name}</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{spec.value}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  {/* Star Rating */}
+                  <div className="flex items-center">
+                    {rating > 0 ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <span key={i} className={`text-lg ${i < rating ? "text-yellow-500" : "text-gray-300"}`}>
+                          ★
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-400 text-sm">No Rating</span>
+                    )}
+                  </div>
+
+                  {/* Sentiment */}
+                  {review.sentiment && (
+                    <p className={`text-sm font-semibold ${
+                      review.sentiment.label === "POSITIVE"
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}>
+                      {review.sentiment.label} ({(review.sentiment.score * 100).toFixed(1)}%)
+                    </p>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Sentiment Analysis */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-          Sentiment Analysis
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Overall Sentiment</p>
-            <p
-              className={`text-xl font-semibold ${
-                data.sentiment_analysis.overall_sentiment === "POSITIVE"
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {data.sentiment_analysis.overall_sentiment}
-            </p>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Positive Reviews</p>
-            <p className="text-xl font-semibold text-green-600 dark:text-green-400">
-              {data.sentiment_analysis.positive_count}
-            </p>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Negative Reviews</p>
-            <p className="text-xl font-semibold text-red-600 dark:text-red-400">
-              {data.sentiment_analysis.negative_count}
-            </p>
-          </div>
-        </div>
-      </div>
+                {/* Bias Scores */}
+                {review.bias_scores && (
+                  <div className="mt-2 text-sm text-gray-500">
+                    {Object.entries(review.bias_scores).map(([bias, score]) => (
+                      <p key={bias}>{bias}: {(score * 100).toFixed(1)}%</p>
+                    ))}
+                  </div>
+                )}
 
-      {/* Product Classification */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-          Product Classification
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {Object.entries(data.classification.categories).map(([category, score]) => (
-            <div key={category} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-              <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{category}</p>
-              <div className="mt-2">
-                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full"
-                    style={{ width: `${score * 100}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                  {(score * 100).toFixed(1)}%
-                </p>
+                {/* Credibility Score */}
+                {review.credibility_score !== undefined && (
+                  <p className="mt-2 text-sm text-blue-600 dark:text-blue-400">
+                    Credibility: {review.credibility_score}%
+                  </p>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+        {data.product_reviews && data.product_reviews.length > 5 && (
+          <button 
+            onClick={() => setShowMoreReviews(!showMoreReviews)}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            {showMoreReviews ? "Show Less" : "Show More"}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ interface UserContextType {
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  resetPasswordConfirm: (accessToken: string, newPassword: string) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -77,10 +78,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
 
     if (!response.ok) throw new Error("Registration failed");
-
-    const data = await response.json();
-    localStorage.setItem("token", data.access_token);
-    await fetchUserData(data.access_token);
   };
 
   const logout = () => {
@@ -166,6 +163,26 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resetPasswordConfirm = async (accessToken: string, newPassword: string) => {
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/auth/update-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: accessToken,
+          new_password: newPassword,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to reset password");
+      }
+    } catch (error) {
+      throw new Error("Failed to reset password. Please try again.");
+    }
+  };  
+
   return (
     <UserContext.Provider
       value={{
@@ -178,6 +195,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         changePassword,
         deleteAccount,
         resetPassword,
+        resetPasswordConfirm,
       }}
     >
       {children}
