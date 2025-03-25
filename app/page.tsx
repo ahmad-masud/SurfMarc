@@ -10,6 +10,7 @@ import ProductAnalysis from "./components/ProductAnalysis";
 export default function Home() {
   const { user, loading } = useUser();
   const [isLoading, setIsLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [productData, setProductData] = useState<any>(null);
   const [error, setError] = useState("");
 
